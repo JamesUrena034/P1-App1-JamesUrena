@@ -3,18 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 
 
-namespace P1_App1_JamesUrena.DAL
-{
+namespace P1_App1_JamesUrena.DAL;
+
     public class Contexto : DbContext
 { 
-    public Contexto(DbContextOptions<Contexto> options) : base(options) { }
     public DbSet<Registros> Registros { get; set; }
+    public Contexto(DbContextOptions<Contexto> options) : base(options) { }
 
 
 }
-}
-
-
-
-
-
