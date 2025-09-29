@@ -1,5 +1,141 @@
 ﻿@page "/Huacales/Index"
 
-@code {
+@inject EntradasHuacalesService huacalesService
+@inject NavigationManager navigationManager
 
+<PageTitle>Registro de Huacales</PageTitle>
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title m-0">Registro de Huacales</h5>
+            <a href="/Huacales/Create" class="btn btn-primary">
+                <span class="bi bi-plus-square"></span> Crear
+            </a>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row mb-3">
+                <div class="col-3">
+                    <label class="form-label"><strong>Desde</strong></label>
+                    <InputDate class="form-control" @bind-Value="desde" />
+                </div>
+                <div class="col-3">
+                    <label class="form-label"><strong>Hasta</strong></label>
+                    <InputDate class="form-control" @bind-Value="hasta" />
+                </div>
+            </div>
+
+            @*labels*@
+            <div class="row">
+                @*Filtrar por*@
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Filtrar por</strong></label>
+                </div>
+
+                @*ValorFiltro*@
+                <div class="col-4">
+                    <label class="col-form-label"><strong>B&uacute;squeda</strong></label>
+                </div>
+            </div>
+
+            @*Inputs y botones*@
+            <div class="row align-items-center">
+                @*filtro*@
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" selected disabled>Elija una opci&oacute;n</option>
+                        <option value="NombreCliente">Cliente</option>
+                    </InputSelect>
+                </div>
+
+                @*Busqueda*@
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                        <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+                    </div>
+                </div>
+            </div>
+
+            <table class="table table-hover table-bordered">
+                <thead class="table table-striped text-black">
+                    <tr>
+                        <th>EntradaId</th>
+                        <th>Fecha</th>
+                        <th>NombreCliente</th>
+                        <th>Cantidad</th>
+                        <th>Precio</th>
+                        <th>Opciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entrada in ListaHuacales)
+                    {
+                        <tr>
+                            <td>@entrada.EntradaId</td>
+                            <td>@entrada.Fecha.ToShortDateString()</td>
+                            <td>@entrada.NombreCliente</td>
+                            <td>@entrada.Cantidad</td>
+                            <td>@entrada.Precio</td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="/Huacales/Edit/@entrada.EntradaId" class="btn btn-outline-primary bi bi-pencil-square"></a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer space-between">
+            <label>Cantidad: @ListaHuacales.Count()</label>
+            <label>Total: @ListaHuacales.Sum(e => e.Precio)</label>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<EntradasHuacales> ListaHuacales { get; set; } = new List<EntradasHuacales>();
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+    DateTime desde = DateTime.MinValue;
+    DateTime hasta = DateTime.MaxValue;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaHuacales = await huacalesService.GetList(e => e.EntradaId > 0);
+    }
+
+    private async Task Buscar()
+    {
+        if (ValorFiltro.Trim() != "")
+        {
+            if (Filtro == "NombreCliente")
+            {
+                ListaHuacales = await huacalesService.GetList(e =>
+                    e.NombreCliente.ToLower().Contains(ValorFiltro.ToLower()) &&
+                    e.Fecha >= desde &&
+                    e.Fecha <= hasta
+                );
+            }
+        }
+        else
+        {
+            ListaHuacales = await huacalesService.GetList(e =>
+                e.EntradaId > 0 &&
+                e.Fecha >= desde &&
+                e.Fecha <= hasta
+            );
+        }
+    }
+
+    private async Task Restablecer()
+    {
+        ListaHuacales = await huacalesService.GetList(e => e.EntradaId > 0);
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+        desde = DateTime.MinValue;
+        hasta = DateTime.MaxValue;
+    }
 }
