@@ -1,7 +1,8 @@
+using Blazored.Toast;
+using Microsoft.EntityFrameworkCore;
 using P1_App1_JamesUrena.Components;
 using P1_App1_JamesUrena.DAL;
 using P1_App1_JamesUrena.Services;
-using Microsoft.EntityFrameworkCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ builder.Services.AddRazorComponents()
 var ConStr = builder.Configuration.GetConnectionString("SqlConnection");   
 builder.Services.AddDbContextFactory<Contexto>(options => options.UseSqlite(ConStr!));
 builder.Services.AddScoped<EntradasHuacalesService>();
+builder.Services.AddBlazoredToast();
 
 var app = builder.Build();
 
