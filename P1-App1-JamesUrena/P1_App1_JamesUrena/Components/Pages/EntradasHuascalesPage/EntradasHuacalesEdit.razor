@@ -1,0 +1,99 @@
+﻿@page "/Huacales/Edit/{EntradaId:int}"
+@using Blazored.Toast.Services
+@rendermode InteractiveServer
+
+
+@inject EntradasHuacalesService huacalesService
+@inject NavigationManager navigationManager
+@inject IToastService toastService
+
+<PageTitle>Modificar</PageTitle>
+<EditForm Model="Entrada" OnValidSubmit="Modificar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h5 class="card-title">Modificar Entrada</h5>
+            </div>
+
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Fecha</strong></label>
+                    <InputDate class="form-control" @bind-Value="Entrada.Fecha" />
+                    <ValidationMessage For="(() => Entrada.Fecha)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Cliente</strong></label>
+                    <InputText class="form-control" @bind-Value="Entrada.NombreCliente" />
+                    <ValidationMessage For="(() => Entrada.NombreCliente)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Cantidad</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Entrada.Cantidad" />
+                    <ValidationMessage For="(() => Entrada.Cantidad)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label"><strong>Precio</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Entrada.Precio" />
+                    <ValidationMessage For="(() => Entrada.Precio)" />
+                </div>
+            </div>
+
+            <div class="card-footer text-center mt-2">
+                <a href="/Huacales/Index" class="btn btn-secondary">
+                    <span class="bi bi-arrow-left"></span> Volver
+                </a>
+                <button type="submit" class="btn btn-primary bi bi-floppy" @onclick="Modificar"> Modificar</button>
+                <button type="button" class="btn btn-danger bi bi-trash" @onclick="Eliminar"> Eliminar</button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int EntradaId { get; set; }
+
+    public EntradasHuacales Entrada { get; set; } = new EntradasHuacales();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Entrada = await huacalesService.Buscar(EntradaId);
+    }
+
+    public async Task Modificar()
+    {
+        var creado = await huacalesService.Guardar(Entrada);
+
+        if (creado)
+        {
+            toastService.ShowSuccess("Se ha modificado correctamente");
+            navigationManager.NavigateTo("/Huacales/Index");
+        }
+        else
+        {
+            toastService.ShowError("No se ha podido modificar correctamente");
+        }
+    }
+
+    private async Task Eliminar()
+    {
+        var eliminado = await huacalesService.Eliminar(Entrada.EntradaId);
+
+        if (eliminado)
+        {
+            toastService.ShowSuccess("Se ha eliminado correctamente");
+            navigationManager.NavigateTo("/Huacales/Index");
+        }
+        else
+        {
+            toastService.ShowError("No se ha podido eliminar correctamente");
+        }
+    }
+}
