@@ -1,4 +1,5 @@
 ﻿@page "/Huacales/Index"
+@rendermode InteractiveServer
 
 @inject EntradasHuacalesService huacalesService
 @inject NavigationManager navigationManager
@@ -99,8 +100,8 @@
     public List<EntradasHuacales> ListaHuacales { get; set; } = new List<EntradasHuacales>();
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
-    DateTime desde = DateTime.MinValue;
-    DateTime hasta = DateTime.MaxValue;
+    DateTime? desde;
+    DateTime? hasta;
 
     protected override async Task OnInitializedAsync()
     {
@@ -115,8 +116,8 @@
             {
                 ListaHuacales = await huacalesService.GetList(e =>
                     e.NombreCliente.ToLower().Contains(ValorFiltro.ToLower()) &&
-                    e.Fecha >= desde &&
-                    e.Fecha <= hasta
+                    e.Fecha.Date >= desde.Value.Date &&
+                    e.Fecha.Date <= hasta.Value.Date
                 );
             }
         }
@@ -124,8 +125,8 @@
         {
             ListaHuacales = await huacalesService.GetList(e =>
                 e.EntradaId > 0 &&
-                e.Fecha >= desde &&
-                e.Fecha <= hasta
+                e.Fecha.Date >= desde.Value.Date &&
+                e.Fecha.Date <= hasta.Value.Date
             );
         }
     }
@@ -135,7 +136,7 @@
         ListaHuacales = await huacalesService.GetList(e => e.EntradaId > 0);
         Filtro = string.Empty;
         ValorFiltro = string.Empty;
-        desde = DateTime.MinValue;
-        hasta = DateTime.MaxValue;
+        desde = null;
+        hasta = null;
     }
 }
