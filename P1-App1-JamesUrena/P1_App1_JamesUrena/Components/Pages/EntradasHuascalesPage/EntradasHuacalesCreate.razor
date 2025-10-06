@@ -2,13 +2,13 @@
 @using Blazored.Toast.Services
 @rendermode InteractiveServer
 
-
 @inject EntradasHuacalesService huacalesService
 @inject NavigationManager navigationManager
 @inject IToastService toastService
 
 <PageTitle>Create</PageTitle>
-<EditForm Model="Entrada" OnValidSubmit="Guardar">
+
+<EditForm EditContext="editContext" OnValidSubmit="Guardar">
     <DataAnnotationsValidator />
 
     <div class="container">
@@ -18,7 +18,6 @@
             </div>
 
             <div class="card-body">
-
                 <div class="mb-3">
                     <label class="form-label"><strong>Fecha</strong></label>
                     <InputDate class="form-control" @bind-Value="Entrada.Fecha" />
@@ -54,9 +53,21 @@
 
 @code {
     public EntradasHuacales Entrada { get; set; } = new EntradasHuacales();
+    private EditContext editContext;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(Entrada);
+    }
 
     public async Task Guardar()
     {
+        if (!editContext.Validate())
+        {
+            toastService.ShowWarning("Por favor completa correctamente los campos antes de guardar.");
+            return;
+        }
+
         var creado = await huacalesService.Guardar(Entrada);
 
         if (creado)
