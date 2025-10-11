@@ -1,83 +1,175 @@
 ﻿@page "/Huacales/Create"
-@using Blazored.Toast.Services
-@rendermode InteractiveServer
-
 @inject EntradasHuacalesService huacalesService
 @inject NavigationManager navigationManager
-@inject IToastService toastService
+@inject ToastService toastService
+@rendermode InteractiveServer
 
-<PageTitle>Create</PageTitle>
+<PageTitle>Crear Entrada</PageTitle>
 
 <EditForm EditContext="editContext" OnValidSubmit="Guardar">
-    <DataAnnotationsValidator />
+	<DataAnnotationsValidator />
 
-    <div class="container">
-        <div class="card shadow-lg">
-            <div class="card-header text-center">
-                <h5 class="card-title">Crear Entrada</h5>
-            </div>
+	<div class="container">
+		<div class="card shadow-lg">
+			<div class="card-header text-center">
+				<h5 class="card-title">Crear Entrada</h5>
+			</div>
 
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label"><strong>Fecha</strong></label>
-                    <InputDate class="form-control" @bind-Value="Entrada.Fecha" />
-                    <ValidationMessage For="(() => Entrada.Fecha)" />
-                </div>
+			<div class="card-body">
+				<div class="mb-3">
+					<label class="form-label"><strong>Fecha</strong></label>
+					<InputDate class="form-control" @bind-Value="Entrada.Fecha" />
+					<ValidationMessage For="(() => Entrada.Fecha)" />
+				</div>
+				<div class="mb-3">
+					<label class="form-label"><strong>Cliente</strong></label>
+					<InputText class="form-control" @bind-Value="Entrada.NombreCliente" />
+					<ValidationMessage For="(() => Entrada.NombreCliente)" />
+				</div>
 
-                <div class="mb-3">
-                    <label class="form-label"><strong>Cliente</strong></label>
-                    <InputText class="form-control" @bind-Value="Entrada.NombreCliente" />
-                    <ValidationMessage For="(() => Entrada.NombreCliente)" />
-                </div>
+				<div class="border border-success p-3 mt-3">
+					<h6 class="text-center mb-3">Detalles de Huacales</h6>
 
-                <div class="mb-3">
-                    <label class="form-label"><strong>Cantidad</strong></label>
-                    <InputNumber class="form-control" @bind-Value="Entrada.Cantidad" />
-                    <ValidationMessage For="(() => Entrada.Cantidad)" />
-                </div>
+					<div class="row g-2 align-items-center mb-3">
+						<div class="col-md-4">
+							<label class="form-label">Tipo:</label>
+							<InputSelect class="form-select" @bind-Value="Detalle.TipoId">
+								<option disabled value="0">Seleccione un tipo de huacal</option>
+								@foreach (var tipo in ListaTipos)
+								{
+									<option value="@tipo.TipoId">@tipo.TipoId - @tipo.Descripcion (Existencia: @tipo.Existencia)</option>
+								}
+							</InputSelect>
+						</div>
 
-                <div class="mb-3">
-                    <label class="form-label"><strong>Precio</strong></label>
-                    <InputNumber class="form-control" @bind-Value="Entrada.Precio" />
-                    <ValidationMessage For="(() => Entrada.Precio)" />
-                </div>
-            </div>
+						<div class="col-md-3">
+							<label class="form-label">Cantidad:</label>
+							<InputNumber class="form-control" @bind-Value="Detalle.CantidadId" />
+						</div>
 
-            <div class="card-footer text-center mt-2">
-                <a href="/Huacales/Index" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
-                <button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
-            </div>
-        </div>
-    </div>
+						<div class="col-md-3">
+							<label class="form-label">Precio:</label>
+							<InputNumber class="form-control" @bind-Value="Detalle.Precio" />
+						</div>
+
+						<div class="col-md-2 text-center mt-4">
+							<button type="button" class="btn btn-outline-success bi bi-plus" @onclick="AgregarDetalle">
+								Agregar
+							</button>
+						</div>
+					</div>
+
+					<hr />
+
+					<table class="table table-bordered table-striped mt-3">
+						<thead class="table-dark">
+							<tr>
+								<th>Tipo</th>
+								<th>Cantidad</th>
+								<th>Precio</th>
+								<th>Acción</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (var item in Entrada.EntradasHuacalesDetalle)
+							{
+								<tr>
+									<td>@ListaTipos.FirstOrDefault(t => t.TipoId == item.TipoId)?.Descripcion</td>
+									<td>@item.CantidadId</td>
+									<td>@item.Precio</td>
+									<td>
+										<button type="button" class="btn btn-danger btn-sm" @onclick="() => EliminarDetalle(item)">
+											<i class="bi bi-trash"></i> Eliminar
+										</button>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+					<p class="text-end"><strong>Cantidad Detalles:</strong> @Entrada.EntradasHuacalesDetalle.Count</p>
+				</div>
+			</div>
+
+			<div class="card-footer text-center mt-2">
+				<a href="/Huacales/Index" class="btn btn-secondary">
+					<span class="bi bi-arrow-left"></span> Volver
+				</a>
+				<button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
+			</div>
+		</div>
+	</div>
 </EditForm>
 
 @code {
-    public EntradasHuacales Entrada { get; set; } = new EntradasHuacales();
-    private EditContext editContext;
+	public EntradasHuacales Entrada { get; set; } = new();
+	public EntradasHuacalesDetalles Detalle { get; set; } = new();
+	public List<TiposHuacales> ListaTipos { get; set; } = new();
+	private EditContext editContext = default!;
 
-    protected override void OnInitialized()
-    {
-        editContext = new EditContext(Entrada);
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		Entrada.CantidadId = 1;   
+		Entrada.Precio = 0.01;
 
-    public async Task Guardar()
-    {
-        if (!editContext.Validate())
-        {
-            toastService.ShowWarning("Por favor completa correctamente los campos antes de guardar.");
-            return;
-        }
+		editContext = new EditContext(Entrada);
+		ListaTipos = await huacalesService.ListarTiposHuacales();
+	}
 
-        var creado = await huacalesService.Guardar(Entrada);
+	private void AgregarDetalle()
+	{
+		if (Detalle.TipoId == 0 || Detalle.CantidadId <= 0 || Detalle.Precio <= 0)
+		{
+			toastService.ShowWarning("Debe completar todos los campos del detalle correctamente.");
+			return;
+		}
 
-        if (creado)
-        {
-            toastService.ShowSuccess("Entrada guardada correctamente");
-            navigationManager.NavigateTo("/Huacales/Index");
-        }
-        else
-        {
-            toastService.ShowError("No se pudo guardar correctamente");
-        }
-    }
+		if (Entrada.EntradasHuacalesDetalle == null)
+			Entrada.EntradasHuacalesDetalle = new List<EntradasHuacalesDetalles>();
+
+		var nuevo = new EntradasHuacalesDetalles
+		{
+			TipoId = Detalle.TipoId,
+			CantidadId = Detalle.CantidadId,
+			Precio = Detalle.Precio
+		};
+
+		Entrada.EntradasHuacalesDetalle.Add(nuevo);
+		editContext.NotifyFieldChanged(new FieldIdentifier(Entrada, nameof(Entrada.EntradasHuacalesDetalle)));
+
+		Detalle = new EntradasHuacalesDetalles();
+		
+	}
+
+	private void EliminarDetalle(EntradasHuacalesDetalles item)
+	{
+		Entrada.EntradasHuacalesDetalle.Remove(item);
+		editContext.NotifyFieldChanged(new FieldIdentifier(Entrada, nameof(Entrada.EntradasHuacalesDetalle)));
+	}
+
+	public async Task Guardar()
+	{
+		if (!editContext.Validate())
+		{
+			toastService.ShowWarning("Por favor completa correctamente los campos antes de guardar.");
+			return;
+		}
+
+		if (!Entrada.EntradasHuacalesDetalle.Any())
+		{
+			toastService.ShowWarning("Debe agregar al menos un detalle de huacal a la entrada.");
+			return;
+		}
+
+		var creado = await huacalesService.Guardar(Entrada);
+
+		if (creado)
+		{
+			toastService.ShowSuccess("Entrada guardada correctamente");
+			navigationManager.NavigateTo("/Huacales/Index");
+		}
+		else
+		{
+			toastService.ShowError("No se pudo guardar correctamente");
+		}
+	}
 }
