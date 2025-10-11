@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace P1_App1_JamesUrena.Models;
@@ -15,9 +17,13 @@ public class EntradasHuacales
     public string NombreCliente { get; set; } = string.Empty;
 
     [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor a 0")]
-    public int Cantidad { get; set; }
+    public int CantidadId { get; set; }
 
     [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
     public double Precio { get; set; }
+
+    [InverseProperty("EntradaHuacales")]
+    public virtual ICollection<EntradasHuacalesDetalles> EntradasHuacalesDetalle { get; set; } = new List<EntradasHuacalesDetalles>();
+
 
 }

@@ -5,7 +5,6 @@
 @inject NavigationManager navigationManager
 
 <PageTitle>Registro de Huacales</PageTitle>
-
 <div class="container">
     <div class="card shadow-lg">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -16,35 +15,39 @@
         </div>
 
         <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-3">
+            <div class="row">
+                <div class="col-12 col-md-3 mb-3">
                     <label class="form-label"><strong>Desde</strong></label>
                     <InputDate class="form-control" @bind-Value="desde" />
                 </div>
-                <div class="col-3">
+                <div class="col-12 col-md-3 mb-3">
                     <label class="form-label"><strong>Hasta</strong></label>
-                    <InputDate class="form-control" @bind-Value="hasta" />
+                    <div class="input-group">
+                        <InputDate class="form-control" @bind-Value="hasta" />
+                    </div>
                 </div>
-                <div class="col-2 d-flex align-items-end">
-                    <button class="btn btn-outline-secondary btn-sm w-100" @onclick="Restablecer">
-                        <i class="bi bi-arrow-clockwise"></i> Restablecer
-                    </button>
-                </div>
+               
             </div>
 
-            <div class="row mb-3">
-                <div class="col-3">
+            <div class="row">
+                <div class="col-12 col-md-3 mb-3">
                     <label class="form-label"><strong>Filtrar por</strong></label>
                     <InputSelect class="form-select" @bind-Value="Filtro">
                         <option value="" selected disabled>Elija una opción</option>
                         <option value="NombreCliente">Cliente</option>
                     </InputSelect>
                 </div>
-                <div class="col-4">
+                <div class="col-12 col-md-3 mb-3">
                     <label class="form-label"><strong>Búsqueda</strong></label>
                     <div class="input-group">
                         <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
                         <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+
+                        <button type="button"
+                        class="btn btn-outline-secondary bi bi-arrow-clockwise"
+                        @onclick="Restablecer">
+                </button>
+
                     </div>
                 </div>
             </div>
@@ -69,9 +72,9 @@
                                 <td>@entrada.EntradaId</td>
                                 <td>@entrada.Fecha.ToShortDateString()</td>
                                 <td>@entrada.NombreCliente</td>
-                                <td>@entrada.Cantidad</td>
+                                <td>@entrada.CantidadId</td>
                                 <td>@entrada.Precio</td>
-                                <td>@(entrada.Cantidad* entrada.Precio)</td>
+                                <td>@(entrada.CantidadId * entrada.Precio)</td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
                                         <a href="/Huacales/Edit/@entrada.EntradaId" class="btn btn-outline-primary bi bi-pencil-square"></a>
@@ -85,8 +88,8 @@
         </div>
 
         <div class="card-footer d-flex justify-content-between">
-            <label><strong>Total Cantidad:</strong> @ListaHuacales.Sum(e => e.Cantidad)</label>
-            <label class="text-end"><strong>Total General:</strong> @ListaHuacales.Sum(e => e.Cantidad * e.Precio)</label>
+            <label><strong>Total Cantidad:</strong> @ListaHuacales.Sum(e => e.CantidadId)</label>
+            <label class="text-end"><strong>Total General:</strong> @ListaHuacales.Sum(e => e.CantidadId * e.Precio)</label>
         </div>
     </div>
 </div>
