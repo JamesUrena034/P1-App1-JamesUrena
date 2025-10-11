@@ -1,12 +1,10 @@
 ﻿@page "/Huacales/Edit/{EntradaId:int}"
-@using Blazored.Toast.Services
-@rendermode InteractiveServer
-
 @inject EntradasHuacalesService huacalesService
 @inject NavigationManager navigationManager
-@inject IToastService toastService
+@inject ToastService toastService
+@rendermode InteractiveServer
 
-<PageTitle>Modificar</PageTitle>
+<PageTitle>Modificar Entrada</PageTitle>
 
 <EditForm EditContext="editContext" OnValidSubmit="Modificar">
     <DataAnnotationsValidator />
@@ -15,7 +13,7 @@
     <div class="container">
         <div class="card shadow-lg">
             <div class="card-header text-center">
-                <h5 class="card-title">Modificar Entrada</h5>
+                <h5 class="card-title">Modificar Entrada: #@Entrada.EntradaId</h5>
             </div>
 
             <div class="card-body">
@@ -32,46 +30,101 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><strong>Cantidad</strong></label>
-                    <InputNumber class="form-control" @bind-Value="Entrada.Cantidad" />
-                    <ValidationMessage For="(() => Entrada.Cantidad)" />
+                    <label class="form-label"><strong>Cantidad Total</strong></label>
+                    <InputNumber class="form-control bg-light" @bind-Value="Entrada.CantidadId" readonly />
+                    <ValidationMessage For="(() => Entrada.CantidadId)" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><strong>Precio</strong></label>
-                    <InputNumber class="form-control" @bind-Value="Entrada.Precio" />
+                    <label class="form-label"><strong>Precio Total</strong></label>
+                    <InputNumber class="form-control bg-light" @bind-Value="Entrada.Precio" readonly />
                     <ValidationMessage For="(() => Entrada.Precio)" />
+                </div>
+
+                <div class="border rounded p-3 mb-3">
+                    <h6 class="text-center mb-3">Detalles de Huacales</h6>
+
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label"><strong>Tipo Huacal</strong></label>
+                            <select class="form-select" @bind="Detalle.TipoId">
+                                <option value="0">Seleccione</option>
+                                @foreach (var tipo in Tipos)
+                                {
+                                    <option value="@tipo.TipoId">@tipo.Descripcion</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label"><strong>Cantidad</strong></label>
+                            <InputNumber class="form-control" @bind-Value="Detalle.CantidadId" />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label"><strong>Precio</strong></label>
+                            <InputNumber class="form-control" @bind-Value="Detalle.Precio" />
+                        </div>
+
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-success w-100" @onclick="AgregarDetalle">
+                                <i class="bi bi-plus-circle"></i> Agregar
+                            </button>
+                        </div>
+                    </div>
+
+                    <table class="table table-bordered table-striped mt-3">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Entrada.EntradasHuacalesDetalle)
+                            {
+                                <tr>
+                                    <td>@Tipos.FirstOrDefault(t => t.TipoId == item.TipoId)?.Descripcion</td>
+                                    <td>@item.CantidadId</td>
+                                    <td>@item.Precio</td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => EliminarDetalle(item)">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <p class="text-end"><strong>Cantidad Detalles:</strong> @Entrada.EntradasHuacalesDetalle.Count</p>
                 </div>
 
                 <div class="modal fade" id="eliminarModal" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content border-0 shadow-lg rounded-3">
-
                             <div class="modal-header bg-danger text-white">
                                 <h5 class="modal-title" id="eliminarModalLabel">Confirmar eliminación</h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                             </div>
-
                             <div class="modal-body">
                                 <p class="fs-5 text-center mb-4">¿Desea eliminar esta entrada?</p>
-
                                 <div class="p-3 bg-light rounded shadow-sm">
                                     <p class="mb-1"><strong>Nombre:</strong> @Entrada.NombreCliente</p>
-                                    <p class="mb-1"><strong>Cantidad:</strong> @Entrada.Cantidad</p>
-                                    <p class="mb-1"><strong>Precio:</strong> @Entrada.Precio</p>
+                                    <p class="mb-1"><strong>Cantidad:</strong> @Entrada.CantidadId</p>
                                     <p class="mb-0"><strong>Fecha:</strong> @Entrada.Fecha.ToShortDateString()</p>
                                 </div>
                             </div>
-
                             <div class="modal-footer d-flex justify-content-between">
                                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                                     <i class="bi bi-x-circle"></i> Cerrar
                                 </button>
-                                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar">
+                                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar" data-bs-dismiss="modal">
                                     <i class="bi bi-trash-fill"></i> Eliminar
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -90,13 +143,69 @@
 
 @code {
     [Parameter] public int EntradaId { get; set; }
-    public EntradasHuacales Entrada { get; set; } = new EntradasHuacales();
-    private EditContext editContext;
+    public EntradasHuacales Entrada { get; set; } = new();
+    public EntradasHuacalesDetalles Detalle { get; set; } = new();
+    public List<TiposHuacales> Tipos { get; set; } = new();
+    private EditContext editContext = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        Entrada = await huacalesService.Buscar(EntradaId);
+        Entrada = await huacalesService.Buscar(EntradaId) ?? new();
+
+        // Aseguramos que la lista de detalles no sea nula si la entrada es nueva o no se cargó correctamente.
+        if (Entrada.EntradasHuacalesDetalle == null)
+        {
+            Entrada.EntradasHuacalesDetalle = new List<EntradasHuacalesDetalles>();
+        }
+
+        Tipos = await huacalesService.ListarTiposHuacales();
         editContext = new EditContext(Entrada);
+
+        // Agregado: Revalidar o notificar para asegurar que los campos pasen la validación inicial
+        // si se usan atributos [Range] en CantidadId o Precio.
+        editContext.NotifyValidationStateChanged();
+    }
+
+    void RecalcularTotales()
+    {
+     
+        Entrada.CantidadId = Entrada.EntradasHuacalesDetalle.Sum(d => d.CantidadId);
+        Entrada.Precio = Entrada.EntradasHuacalesDetalle.Sum(d => d.Precio);
+
+      
+        editContext.NotifyFieldChanged(new FieldIdentifier(Entrada, nameof(Entrada.CantidadId)));
+        editContext.NotifyFieldChanged(new FieldIdentifier(Entrada, nameof(Entrada.Precio)));
+        editContext.NotifyFieldChanged(new FieldIdentifier(Entrada, nameof(Entrada.EntradasHuacalesDetalle)));
+
+      
+        editContext.Validate();
+    }
+
+    void AgregarDetalle()
+    {
+        if (Detalle.TipoId == 0 || Detalle.CantidadId <= 0 || Detalle.Precio <= 0)
+        {
+            toastService.ShowWarning("Debe seleccionar un tipo y especificar una cantidad y precio válidos.");
+            return;
+        }
+
+        Entrada.EntradasHuacalesDetalle.Add(new EntradasHuacalesDetalles
+        {
+            TipoId = Detalle.TipoId,
+            CantidadId = Detalle.CantidadId,
+            Precio = Detalle.Precio
+        });
+
+        RecalcularTotales();
+
+        Detalle = new EntradasHuacalesDetalles();
+    }
+
+    void EliminarDetalle(EntradasHuacalesDetalles item)
+    {
+        Entrada.EntradasHuacalesDetalle.Remove(item);
+
+        RecalcularTotales();
     }
 
     public async Task Modificar()
@@ -107,9 +216,16 @@
             return;
         }
 
-        var creado = await huacalesService.Guardar(Entrada);
+        if (!Entrada.EntradasHuacalesDetalle.Any())
+        {
+            toastService.ShowWarning("La entrada debe contener al menos un detalle de huacal.");
+            return;
+        }
 
-        if (creado)
+
+        var modificado = await huacalesService.Guardar(Entrada);
+
+        if (modificado)
         {
             toastService.ShowSuccess("Se ha modificado correctamente");
             navigationManager.NavigateTo("/Huacales/Index");
